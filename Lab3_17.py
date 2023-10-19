@@ -11,6 +11,7 @@ data.head()
 xgen = data['x'].tolist()
 xgen = list(map(float, xgen))
 
+print(xgen)
 
 class Light_Velocity:
 
@@ -20,21 +21,21 @@ class Light_Velocity:
 
         if (self.medium == 'air'):
             xbegin = 0
-            xend = 9
+            xend = 10
             self.k = 1
             self.lm = 0
             self.x1 = 0
 
         elif (self.medium == 'water'):
             xbegin = 10
-            xend = 19
+            xend = 20
             self.lm = 1
             self.k = 0
             self.x1 = xgen[31]/100
 
         elif (self.medium == 'resin'):
             xbegin = 20
-            xend = 29
+            xend = 30
             self.lm = 0.285
             self.k = 0
             self.x1 = xgen[32]/100
@@ -43,6 +44,9 @@ class Light_Velocity:
 
         for val in range(xbegin, xend):
             self.x.append(xgen[val]/100)
+
+
+        print(self.x)
 
         self.frequency = 50.1e6
 
@@ -69,14 +73,30 @@ class Light_Velocity:
 
 
     def output(self, c_air = 0, delta_c_air = 0):
-        print('Скорость света в', self.medium,'=', self.c_average, '±', self.delta_c)
+
+        print('Среда:', self.medium)
+
+        for val in range(0,len(self.x)):
+            self.x[val] -= self.x1
+
+        table = pd.DataFrame({
+            'Δx, m': self.x,
+            'c, m/s': self.c,
+            'c-<c>, m/s': self.c_deflect,
+            '(c-<c>)², m²/s²': self.c_deflect_squared})
+
+        print(table.to_markdown())
+
+        print('Скорость света в', self.medium,'= (', "{:.2e}".format(self.c_average), '±', "{:.0e}".format(self.delta_c), ') m/s')
 
         if (self.medium != 'air'):
             self.n = c_air/self.c_average
             self.delta_n_otn = np.sqrt(np.square(self.delta_c/self.c_average) + np.square(delta_c_air/c_air))
             self.delta_n = self.n * self.delta_n_otn
 
-            print('Показатель преломления в', self.medium, 'n =', c_air/self.c_average, '±', self.delta_n)
+            print('Показатель преломления в', self.medium, 'n =', "{:.3}".format(self.n), '±', "{:.2}".format(self.delta_n))
+
+        print()
 
 
 
@@ -92,5 +112,8 @@ c_resin = Resin.count_c(c_air)
 Air.output()
 Water.output(c_air, delta_c_air)
 Resin.output(c_air, delta_c_air)
+
+
+
 
 
